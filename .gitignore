@@ -11,11 +11,14 @@ batch/logs/*
 batch/batch-state.tsv
 batch/batch-input.tsv
 batch/tracker-additions/*.tsv
+batch/tracker-additions/merged/
 !batch/tracker-additions/.gitkeep
 jds/*
 !jds/.gitkeep
 
 # User config and customization (never auto-updated)
+cv.md
+article-digest.md
 config/profile.yml
 portals.yml
 modes/_profile.md
@@ -25,6 +28,7 @@ modes/_profile.md
 # Generated
 .resolved-prompt-*
 node_modules/
+package-lock.json
 
 # OS
 .DS_Store
