@@ -1,94 +1,102 @@
-# Modo: pdf — Generación de PDF ATS-Optimizado
+# Mode: pdf — ATS-Optimised PDF Generation
 
-## Pipeline completo
+## Full pipeline
 
-1. Lee `cv.md` como fuentes de verdad
-2. Pide al usuario el JD si no está en contexto (texto o URL)
-3. Extrae 15-20 keywords del JD
-4. Detecta idioma del JD → idioma del CV (EN default)
-5. Detecta ubicación empresa → formato papel:
+1. Read `cv.md` as the source of truth
+2. Ask the user for the JD if not already in context (text or URL)
+3. Extract 15-20 keywords from the JD
+4. Detect JD language → CV language (EN default)
+5. Detect company location → paper format:
    - US/Canada → `letter`
-   - Resto del mundo → `a4`
-6. Detecta arquetipo del rol → adapta framing
-7. Reescribe Professional Summary inyectando keywords del JD + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [domain del JD].")
-8. Selecciona top 3-4 proyectos más relevantes para la oferta
-9. Reordena bullets de experiencia por relevancia al JD
-10. Construye competency grid desde requisitos del JD (6-8 keyword phrases)
-11. Inyecta keywords naturalmente en logros existentes (NUNCA inventa)
-12. Genera HTML completo desde template + contenido personalizado
-13. Escribe HTML a `/tmp/cv-candidate-{company}.html`
-14. Ejecuta: `node generate-pdf.mjs /tmp/cv-candidate-{company}.html output/cv-candidate-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-15. Reporta: ruta del PDF, nº páginas, % cobertura de keywords
+   - Rest of world → `a4`
+6. Detect role archetype → adapt framing
+7. Rewrite Professional Summary injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
+8. Select top 3-4 projects most relevant to the offer
+9. Reorder experience bullets by relevance to the JD
+10. Build competency grid from JD requirements (6-8 keyword phrases)
+11. Inject keywords naturally into existing achievements (NEVER invent)
+12. Generate complete HTML from template + personalised content
+13. Write HTML to `/tmp/Moruf-Ajibike-CV-{company}.html`
+14. Execute: `node generate-pdf.mjs /tmp/Moruf-Ajibike-CV-{company}.html output/Moruf-Ajibike-CV-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+15. Report: PDF path, number of pages, % keyword coverage
 
-## Reglas ATS (parseo limpio)
+## ATS rules (clean parsing)
 
-- Layout single-column (sin sidebars, sin columnas paralelas)
-- Headers estándar: "Professional Summary", "Work Experience", "Education", "Skills", "Certifications", "Projects"
-- Sin texto en imágenes/SVGs
-- Sin info crítica en headers/footers del PDF (ATS los ignora)
-- UTF-8, texto seleccionable (no rasterizado)
-- Sin tablas anidadas
-- Keywords del JD distribuidas: Summary (top 5), primer bullet de cada rol, Skills section
+- Single-column layout (no sidebars, no parallel columns)
+- Standard headers: "Professional Summary", "Work Experience", "Education", "Skills", "Certifications", "Projects"
+- No text in images/SVGs
+- No critical information in PDF headers/footers (ATS ignores them)
+- UTF-8, selectable text (not rasterised)
+- No nested tables
+- JD keywords distributed: Summary (top 5), first bullet of each role, Skills section
 
-## Diseño del PDF
+## PDF Design
 
-- **Fonts**: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
-- **Fonts self-hosted**: `fonts/`
-- **Header**: nombre en Space Grotesk 24px bold + línea gradiente `linear-gradient(to right, hsl(187,74%,32%), hsl(270,70%,45%))` 2px + fila de contacto
-- **Section headers**: Space Grotesk 13px, uppercase, letter-spacing 0.05em, color cyan primary
-- **Body**: DM Sans 11px, line-height 1.5
-- **Company names**: color accent purple `hsl(270,70%,45%)`
-- **Márgenes**: 0.6in
-- **Background**: blanco puro
+- **Font**: Georgia, 'Times New Roman', serif (all elements — no custom web fonts)
+- **Header**: Name 20px bold uppercase left + citizenship suffix slightly smaller + bold italic subtitle below; contact info right-aligned stacked
+- **Competency bar**: Centred pipe-separated small-caps text between two thin horizontal rules
+- **Section headers**: Georgia 12px, uppercase small-caps, centred, letter-spacing 0.08em, thin rule below, black text only
+- **Body**: Georgia 10.5px, line-height 1.55
+- **Company names**: plain black text (no colour accents)
+- **Colour**: Black and white only — no gradients, no coloured backgrounds. Email/links may use teal (#007272)
+- **Margins**: 0.75in (via @page)
+- **Background**: pure white
+- **Bullets**: Solid circle (●) markers
+- **Footer**: "Page X of Y" centred (via @page @bottom-center)
 
-## Orden de secciones (optimizado "6-second recruiter scan")
+## Section order (optimised for "6-second recruiter scan")
 
-1. Header (nombre grande, gradiente, contacto, link portfolio)
-2. Professional Summary (3-4 líneas, keyword-dense)
-3. Core Competencies (6-8 keyword phrases en flex-grid)
-4. Work Experience (cronológico inverso)
-5. Projects (top 3-4 más relevantes)
-6. Education & Certifications
-7. Skills (idiomas + técnicos)
+1. Header (name + citizenship left, contact stacked right, bold italic role subtitle)
+2. Competency bar (pipe-separated keywords between horizontal rules)
+3. Professional Summary (3-4 lines, keyword-dense, no heading label)
+4. Technical Skills (bold category + colon + plain values per line)
+5. Selected Accomplishments (bullet list of key achievements)
+6. Career Summary / Work Experience (reverse chronological)
+7. Projects (top 3-4 most relevant)
+8. Education
+9. Certifications
 
-## Estrategia de keyword injection (ético, basado en verdad)
+## Keyword injection strategy (ethical, truth-based)
 
-Ejemplos de reformulación legítima:
-- JD dice "RAG pipelines" y CV dice "LLM workflows with retrieval" → cambiar a "RAG pipeline design and LLM orchestration workflows"
-- JD dice "MLOps" y CV dice "observability, evals, error handling" → cambiar a "MLOps and observability: evals, error handling, cost monitoring"
-- JD dice "stakeholder management" y CV dice "collaborated with team" → cambiar a "stakeholder management across engineering, operations, and business"
+Examples of legitimate reformulation:
+- JD says "RAG pipelines" and CV says "LLM workflows with retrieval" → change to "RAG pipeline design and LLM orchestration workflows"
+- JD says "MLOps" and CV says "observability, evals, error handling" → change to "MLOps and observability: evals, error handling, cost monitoring"
+- JD says "stakeholder management" and CV says "collaborated with team" → change to "stakeholder management across engineering, operations, and business"
 
-**NUNCA añadir skills que el candidato no tiene. Solo reformular experiencia real con el vocabulario exacto del JD.**
+**NEVER add skills the candidate does not have. Only reformulate real experience using the exact vocabulary of the JD.**
 
-## Template HTML
+## HTML Template
 
-Usar el template en `cv-template.html`. Reemplazar los placeholders `{{...}}` con contenido personalizado:
+Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with personalised content:
 
-| Placeholder | Contenido |
-|-------------|-----------|
-| `{{LANG}}` | `en` o `es` |
-| `{{PAGE_WIDTH}}` | `8.5in` (letter) o `210mm` (A4) |
-| `{{NAME}}` | (from profile.yml) |
+| Placeholder | Content |
+|-------------|---------|
+| `{{LANG}}` | `en` or `es` |
+| `{{PAGE_WIDTH}}` | `8.5in` (letter) or `210mm` (A4) |
+| `{{NAME}}` | Full name, uppercase (from profile.yml) |
+| `{{CITIZENSHIP}}` | e.g. `British Citizen` — shown in parentheses next to name |
+| `{{ROLE_TITLE}}` | Target role title, bold italic subtitle below name |
 | `{{EMAIL}}` | (from profile.yml) |
+| `{{PHONE}}` | Phone number (from profile.yml) |
 | `{{LINKEDIN_URL}}` | [from profile.yml] |
 | `{{LINKEDIN_DISPLAY}}` | [from profile.yml] |
-| `{{PORTFOLIO_URL}}` | [from profile.yml] (o /es según idioma) |
-| `{{PORTFOLIO_DISPLAY}}` | [from profile.yml] (o /es según idioma) |
+| `{{PORTFOLIO_URL}}` | [from profile.yml] (or /es depending on language) |
+| `{{PORTFOLIO_DISPLAY}}` | [from profile.yml] (or /es depending on language) |
 | `{{LOCATION}}` | [from profile.yml] |
-| `{{SECTION_SUMMARY}}` | Professional Summary / Resumen Profesional |
-| `{{SUMMARY_TEXT}}` | Summary personalizado con keywords |
-| `{{SECTION_COMPETENCIES}}` | Core Competencies / Competencias Core |
-| `{{COMPETENCIES}}` | `<span class="competency-tag">keyword</span>` × 6-8 |
-| `{{SECTION_EXPERIENCE}}` | Work Experience / Experiencia Laboral |
-| `{{EXPERIENCE}}` | HTML de cada trabajo con bullets reordenados |
-| `{{SECTION_PROJECTS}}` | Projects / Proyectos |
-| `{{PROJECTS}}` | HTML de top 3-4 proyectos |
-| `{{SECTION_EDUCATION}}` | Education / Formación |
-| `{{EDUCATION}}` | HTML de educación |
-| `{{SECTION_CERTIFICATIONS}}` | Certifications / Certificaciones |
-| `{{CERTIFICATIONS}}` | HTML de certificaciones |
-| `{{SECTION_SKILLS}}` | Skills / Competencias |
-| `{{SKILLS}}` | HTML de skills |
+| `{{SUMMARY_TEXT}}` | Personalised summary with keywords (no section heading — rendered as plain paragraph) |
+| `{{SECTION_COMPETENCIES}}` | Selected Accomplishments |
+| `{{COMPETENCY_BAR}}` | Pipe-separated competency keywords, e.g. `CLOUD TECHNOLOGIES \| CI/CD PIPELINES \| INFRASTRUCTURE AS CODE` |
+| `{{COMPETENCIES}}` | HTML bullet list of key accomplishments |
+| `{{SECTION_EXPERIENCE}}` | Career Summary |
+| `{{EXPERIENCE}}` | HTML for each role with reordered bullets |
+| `{{SECTION_PROJECTS}}` | Projects |
+| `{{PROJECTS}}` | HTML for top 3-4 projects |
+| `{{SECTION_EDUCATION}}` | Education |
+| `{{EDUCATION}}` | HTML for education |
+| `{{SECTION_CERTIFICATIONS}}` | Certifications |
+| `{{CERTIFICATIONS}}` | HTML for certifications |
+| `{{SECTION_SKILLS}}` | Technical Skills |
+| `{{SKILLS}}` | HTML: bold category label + colon + plain values per line |
 
 ## Canva CV Generation (optional)
 
@@ -136,7 +144,7 @@ b. `perform-editing-operations` with `find_and_replace_text` for each section:
    - Replace competency/skills text with JD-matched terms
    - Replace project descriptions with top relevant projects
 c. **Reflow layout after text replacement:**
-   After applying all text replacements, the text boxes auto-resize but neighboring elements stay in place. This causes uneven spacing between work experience sections. Fix this:
+   After applying all text replacements, the text boxes auto-resize but neighbouring elements stay in place. This causes uneven spacing between work experience sections. Fix this:
    1. Read the updated element positions and dimensions from the `perform-editing-operations` response
    2. For each work experience section (top to bottom), calculate where the bullets text box ends: `end_y = top + height`
    3. The next section's header should start at `end_y + consistent_gap` (use the original gap from the template, typically ~30px)
@@ -172,6 +180,6 @@ d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 - If `find_and_replace_text` finds no matches → try broader substring matching
 - Always provide the Canva design URL so the user can edit manually if auto-edit fails
 
-## Post-generación
+## Post-generation
 
-Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
+Update the tracker if the offer is already recorded: change PDF from ❌ to ✅.
