@@ -79,17 +79,17 @@ Levels are additive — all are executed, results are merged and deduplicated.
       - **company**: after the " @ " in the title, or extracted from the domain/path
    c. Accumulate in candidate list (dedup with Level 1+2)
 
-6. **Filter by title** using `title_filter` from `portals.yml`:
+7. **Filter by title** using `title_filter` from `portals.yml`:
    - At least 1 keyword from `positive` must appear in the title (case-insensitive)
    - 0 keywords from `negative` must appear
    - `seniority_boost` keywords give priority but are not mandatory
 
-7. **Deduplicate** against 3 sources:
+8. **Deduplicate** against 3 sources:
    - `scan-history.tsv` → exact URL already seen
    - `applications.md` → normalised company + role already evaluated
    - `pipeline.md` → exact URL already in pending or processed
 
-7.5. **Verify liveness of WebSearch results (Level 3)** — BEFORE adding to pipeline:
+9. **Verify liveness of WebSearch results (Level 3)** — BEFORE adding to pipeline:
 
    WebSearch results may be out of date (Google caches results for weeks or months). To avoid evaluating expired offers, verify with Playwright each new URL coming from Level 3. Levels 1 and 2 are inherently real-time and do not require this verification.
 
@@ -103,17 +103,17 @@ Levels are additive — all are executed, results are merged and deduplicated.
         - Page contains: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found"
         - Only navbar and footer visible, no JD content (content < ~300 chars)
    d. If expired: record in `scan-history.tsv` with status `skipped_expired` and discard
-   e. If active: continue to step 8
+   e. If active: continue to step 10
 
    **Do not interrupt the entire scan if one URL fails.** If `browser_navigate` gives an error (timeout, 403, etc.), mark as `skipped_expired` and continue with the next.
 
-8. **For each verified new offer that passes filters**:
-   a. Add to `pipeline.md` "Pending" section: `- [ ] {url} | {company} | {title}`
-   b. Record in `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
+10. **For each verified new offer that passes filters**:
+    a. Add to `pipeline.md` "Pending" section: `- [ ] {url} | {company} | {title}`
+    b. Record in `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
 
-9. **Offers filtered by title**: record in `scan-history.tsv` with status `skipped_title`
-10. **Duplicate offers**: record with status `skipped_dup`
-11. **Expired offers (Level 3)**: record with status `skipped_expired`
+11. **Offers filtered by title**: record in `scan-history.tsv` with status `skipped_title`
+12. **Duplicate offers**: record with status `skipped_dup`
+13. **Expired offers (Level 3)**: record with status `skipped_expired`
 
 ## Title and Company Extraction from WebSearch Results
 

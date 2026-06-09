@@ -295,6 +295,7 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 | `Evaluated` | Report completed, pending decision |
 | `Applied` | Application sent |
 | `Responded` | Company responded |
+| `Contact` | Candidate proactively reached out (outbound outreach) |
 | `Interview` | In interview process |
 | `Offer` | Offer received |
 | `Rejected` | Rejected by company |

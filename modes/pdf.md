@@ -11,19 +11,18 @@
    - Rest of world → `a4`
 6. Detect role archetype → adapt framing
 7. Rewrite Professional Summary injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
-8. Select top 3-4 projects most relevant to the offer
-9. Reorder experience bullets by relevance to the JD
-10. Build competency grid from JD requirements (6-8 keyword phrases)
-11. Inject keywords naturally into existing achievements (NEVER invent)
-12. Generate complete HTML from template + personalised content
-13. Write HTML to `/tmp/Moruf-Ajibike-CV-{company}.html`
-14. Execute: `node generate-pdf.mjs /tmp/Moruf-Ajibike-CV-{company}.html output/Moruf-Ajibike-CV-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-15. Report: PDF path, number of pages, % keyword coverage
+8. Reorder experience bullets by relevance to the JD
+9. Build competency grid from JD requirements (6-8 keyword phrases)
+10. Inject keywords naturally into existing achievements (NEVER invent)
+11. Generate complete HTML from template + personalised content
+12. Write HTML to `/tmp/Moruf-Ajibike-CV-{company}.html`
+13. Execute: `node generate-pdf.mjs /tmp/Moruf-Ajibike-CV-{company}.html output/Moruf-Ajibike-CV-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+14. Report: PDF path, number of pages, % keyword coverage
 
 ## ATS rules (clean parsing)
 
 - Single-column layout (no sidebars, no parallel columns)
-- Standard headers: "Professional Summary", "Work Experience", "Education", "Skills", "Certifications", "Projects"
+- Standard headers: "Professional Summary", "Work Experience", "Education", "Skills", "Certifications"
 - No text in images/SVGs
 - No critical information in PDF headers/footers (ATS ignores them)
 - UTF-8, selectable text (not rasterised)
@@ -32,11 +31,11 @@
 
 ## PDF Design
 
-- **Font**: Georgia, 'Times New Roman', serif (all elements — no custom web fonts)
+- **Font**: Tahoma, Geneva, Verdana, sans-serif (all elements — system sans-serif stack, no custom web fonts)
 - **Header**: Name 20px bold uppercase left + citizenship suffix slightly smaller + bold italic subtitle below; contact info right-aligned stacked
 - **Competency bar**: Centred pipe-separated small-caps text between two thin horizontal rules
-- **Section headers**: Georgia 12px, uppercase small-caps, centred, letter-spacing 0.08em, thin rule below, black text only
-- **Body**: Georgia 10.5px, line-height 1.55
+- **Section headers**: Tahoma 14px, uppercase small-caps, centred, letter-spacing 0.08em, thin rule below, black text only
+- **Body**: Tahoma 12px, line-height 1.55
 - **Company names**: plain black text (no colour accents)
 - **Colour**: Black and white only — no gradients, no coloured backgrounds. Email/links may use teal (#007272)
 - **Margins**: 0.75in (via @page)
@@ -52,9 +51,8 @@
 4. Technical Skills (bold category + colon + plain values per line)
 5. Selected Accomplishments (bullet list of key achievements)
 6. Career Summary / Work Experience (reverse chronological)
-7. Projects (top 3-4 most relevant)
-8. Education
-9. Certifications
+7. Education
+8. Certifications
 
 ## Keyword injection strategy (ethical, truth-based)
 
@@ -89,8 +87,6 @@ Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with 
 | `{{COMPETENCIES}}` | HTML bullet list of key accomplishments |
 | `{{SECTION_EXPERIENCE}}` | Career Summary |
 | `{{EXPERIENCE}}` | HTML for each role with reordered bullets |
-| `{{SECTION_PROJECTS}}` | Projects |
-| `{{PROJECTS}}` | HTML for top 3-4 projects |
 | `{{SECTION_EDUCATION}}` | Education |
 | `{{EDUCATION}}` | HTML for education |
 | `{{SECTION_CERTIFICATIONS}}` | Certifications |
@@ -101,7 +97,7 @@ Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with 
 ## Canva CV Generation (optional)
 
 If `config/profile.yml` has `canva_resume_design_id` set, offer the user a choice before generating:
-- **"HTML/PDF (fast, ATS-optimized)"** — existing flow above
+- **"HTML/PDF (fast, ATS-optimised)"** — existing flow above
 - **"Canva CV (visual, design-preserving)"** — new flow below
 
 If the user has no `canva_resume_design_id`, skip this prompt and use the HTML/PDF flow.
@@ -142,7 +138,6 @@ b. `perform-editing-operations` with `find_and_replace_text` for each section:
    - Replace summary text with tailored summary
    - Replace each experience bullet with reordered/rewritten bullets
    - Replace competency/skills text with JD-matched terms
-   - Replace project descriptions with top relevant projects
 c. **Reflow layout after text replacement:**
    After applying all text replacements, the text boxes auto-resize but neighbouring elements stay in place. This causes uneven spacing between work experience sections. Fix this:
    1. Read the updated element positions and dimensions from the `perform-editing-operations` response
