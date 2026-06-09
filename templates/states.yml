@@ -25,12 +25,6 @@ states:
     description: Company has responded (not yet interview)
     dashboard_group: responded
 
-  - id: contact
-    label: Contact
-    aliases: [contacto, outreach]
-    description: Candidate proactively reached out (outbound outreach, e.g. LinkedIn)
-    dashboard_group: contact
-
   - id: interview
     label: Interview
     aliases: [entrevista]

@@ -57,6 +57,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `generate-pdf.mjs` | Playwright: HTML to PDF |
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
+| `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`) |
 
 ### OpenCode Commands
@@ -205,6 +206,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks to compare offers | `ofertas` |
 | Wants LinkedIn outreach | `contacto` |
 | Asks for company research | `deep` |
+| Preps for interview at specific company | `interview-prep` |
 | Wants to generate CV/PDF | `pdf` |
 | Evaluates a course/cert | `training` |
 | Evaluates portfolio project | `project` |
@@ -295,7 +297,6 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 | `Evaluated` | Report completed, pending decision |
 | `Applied` | Application sent |
 | `Responded` | Company responded |
-| `Contact` | Candidate proactively reached out (outbound outreach) |
 | `Interview` | In interview process |
 | `Offer` | Offer received |
 | `Rejected` | Rejected by company |

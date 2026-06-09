@@ -7,11 +7,10 @@ Reads and displays `data/applications.md`.
 | # | Date | Company | Role | Score | Status | PDF | Report |
 ```
 
-Possible statuses: `Evaluated` → `Applied` → `Responded` → `Contact` → `Interview` → `Offer` / `Rejected` / `Discarded` / `SKIP`
+Possible statuses: `Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` / `Rejected` / `Discarded` / `SKIP`
 
 - `Applied` = the candidate submitted their application
 - `Responded` = a recruiter/company made contact and the candidate responded (inbound)
-- `Contact` = the candidate proactively reached out to someone at the company (outbound, e.g. LinkedIn power move)
 
 If the user asks to update a status, edit the corresponding row.
 

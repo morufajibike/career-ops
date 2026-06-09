@@ -40,7 +40,7 @@
     width: 100%;
     max-width: {{PAGE_WIDTH}};
     margin: 0 auto;
-    padding: 0;
+    padding: 2px 0;
   }
 
   /* === HEADER === */
@@ -153,6 +153,7 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    gap: 12px;
     margin-bottom: 1px;
   }
 
@@ -246,13 +247,14 @@
 
   /* === EDUCATION === */
   .edu-item {
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
 
   .edu-header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    gap: 12px;
   }
 
   .edu-title {
@@ -281,7 +283,8 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-bottom: 4px;
+    gap: 12px;
+    margin-bottom: 6px;
   }
 
   .cert-title {
@@ -384,14 +387,20 @@
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
+
     .page {
       padding: 0;
     }
   }
 
   /* === PAGE BREAK CONTROL === */
-  .avoid-break {
+  .avoid-break,
+  .job,
+  .project,
+  .edu-item,
+  .cert-item {
     break-inside: avoid;
+    page-break-inside: avoid;
   }
 </style>
 </head>
