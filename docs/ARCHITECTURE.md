@@ -5,7 +5,7 @@
 ```
                     ┌─────────────────────────────────┐
                     │         AI Coding CLI Agent      │
-                    │   (reads AGENTS.md + modes/*.md) │
+                    │   (reads CLAUDE.md + modes/*.md) │
                     └──────────┬──────────────────────┘
                                │
             ┌──────────────────┼──────────────────────┐
@@ -24,7 +24,7 @@
      │                    Output Pipeline                      │
      │  ┌──────────┐  ┌────────────┐  ┌───────────────────┐  │
      │  │ Report.md│  │  PDF (HTML  │  │ Tracker TSV       │  │
-     │  │ (A-F eval)│  │  → Puppeteer)│  │ (merge-tracker)  │  │
+     │  │ (A-G eval)│  │  → Puppeteer)│  │ (merge-tracker)  │  │
      │  └──────────┘  └────────────┘  └───────────────────┘  │
      └────────────────────────────────────────────────────────┘
                                │
@@ -39,13 +39,14 @@
 1. **Input**: User pastes JD text or URL
 2. **Extract**: Playwright/WebFetch extracts JD from URL
 3. **Classify**: Detect archetype (1 of 6 types)
-4. **Evaluate**: 6 blocks (A-F):
+4. **Evaluate**: 7 blocks (A-G):
    - A: Role summary
    - B: CV match (gaps + mitigation)
    - C: Level strategy
    - D: Comp research (WebSearch)
    - E: CV personalization plan
    - F: Interview prep (STAR stories)
+   - G: Posting legitimacy
 5. **Score**: Weighted average across 10 dimensions (1-5)
 6. **Report**: Save as `reports/{num}-{company}-{date}.md`
 7. **PDF**: Generate ATS-optimized CV (`generate-pdf.mjs`)
@@ -63,7 +64,7 @@ batch-input.tsv    →  batch-runner.sh  →  N × headless CLI workers
                     (tracks progress)
 ```
 
-Each worker is a headless AI CLI instance — the bundled `batch-runner.sh` invokes `claude -p`, but the architecture supports any CLI's headless mode (see the Headless / Batch Mode table in `AGENTS.md` for the correct command per CLI). Workers produce:
+Each worker is a headless AI CLI instance — the bundled `batch-runner.sh` invokes `claude -p`, but the architecture supports any CLI's headless mode (see `batch/batch-prompt.md` and `modes/batch.md` for the worker prompt and per-CLI invocation). Workers produce:
 - Report .md
 - PDF
 - Tracker TSV line
@@ -103,7 +104,7 @@ Scripts maintain data consistency:
 
 The `dashboard/` directory contains a standalone Go TUI application that visualizes the pipeline:
 
-- Filter tabs: All, Evaluada, Aplicado, Entrevista, Top >=4, No Aplicar
+- Filter tabs: All, Evaluated, Applied, Interview, Top >=4, Skip
 - Sort modes: Score, Date, Company, Status
 - Grouped/flat view
 - Lazy-loaded report previews

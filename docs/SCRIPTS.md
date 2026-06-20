@@ -1,6 +1,6 @@
 # Scripts Reference
 
-All scripts live in the project root as `.mjs` modules and are exposed via `npm run <name>`.
+All scripts live in the project root as `.mjs` modules. Most are exposed via `npm run <name>`; a few (e.g. `scan.mjs`, `analyze-patterns.mjs`, `gemini-eval.mjs`) are invoked directly with `node <script>.mjs`.
 
 ## Quick Reference
 
@@ -13,12 +13,12 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
 | `npm run pdf` | `generate-pdf.mjs` | Convert HTML to ATS-optimized PDF |
 | `npm run sync-check` | `cv-sync-check.mjs` | Validate CV/profile consistency |
-| `npm run patterns` | `analyze-patterns.mjs` | Analyze tracker outcomes and report patterns |
+| `node analyze-patterns.mjs` | `analyze-patterns.mjs` | Analyze tracker outcomes and report patterns |
 | `npm run update:check` | `update-system.mjs check` | Check for upstream updates |
 | `npm run update` | `update-system.mjs apply` | Apply upstream update |
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
-| `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+| `node scan.mjs` | `scan.mjs` | Zero-token portal scanner |
 
 ---
 
@@ -123,9 +123,9 @@ npm run sync-check
 Analyzes application outcomes, scores, archetypes, blockers, remote policy, and company size from `data/applications.md` and linked reports. New reports should include `## Machine Summary` YAML; `analyze-patterns.mjs` uses it first and falls back to legacy markdown parsing for older reports.
 
 ```bash
-npm run patterns
-npm run patterns -- --summary
-npm run patterns -- --min-threshold 3
+node analyze-patterns.mjs
+node analyze-patterns.mjs --summary
+node analyze-patterns.mjs --min-threshold 3
 node analyze-patterns.mjs --self-test
 ```
 
@@ -212,7 +212,7 @@ Use `args` only for reusable parsers that intentionally accept runtime parameter
 If a parser writes full extraction artifacts for debugging or audit, store them under `data/parser-output/{company}/`. `scan.mjs` reads stdout and does not require those JSON files after parsing. Keep generated JSON artifacts out of git; `.gitkeep` placeholders are the only exception for preserving directory structure.
 
 ```bash
-npm run scan
+node scan.mjs
 ```
 
 **Exit codes:** `0` scan completed, `1` configuration error or no portals.yml found.

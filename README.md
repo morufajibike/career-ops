@@ -57,7 +57,7 @@
 
 Career-Ops ([career-ops.org](https://career-ops.org), also known as **careerops**) turns any AI coding CLI into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
 
-- **Evaluates offers** with a structured A-F scoring system (10 weighted dimensions)
+- **Evaluates offers** with a structured A-G scoring system (10 weighted dimensions)
 - **Generates tailored PDFs** -- ATS-optimized CVs customized per job description
 - **Scans portals** automatically (Greenhouse, Ashby, Lever, company pages)
 - **Processes in batch** -- evaluate 10+ offers in parallel with sub-agents
@@ -76,11 +76,11 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | Feature                  | Description                                                                                                                              |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **Auto-Pipeline**        | Paste a URL, get a full evaluation + PDF + tracker entry                                                                                 |
-| **6-Block Evaluation**   | Role summary, CV match, level strategy, comp research, personalization, interview prep (STAR+R)                                          |
+| **7-Block Evaluation**   | Role summary, CV match, level strategy, comp research, personalization, interview prep (STAR+R), posting legitimacy                      |
 | **Interview Story Bank** | Accumulates STAR+Reflection stories across evaluations -- 5-10 master stories that answer any behavioral question                        |
 | **Negotiation Scripts**  | Salary negotiation frameworks, geographic discount pushback, competing offer leverage                                                    |
 | **ATS PDF Generation**   | Keyword-injected CVs with Space Grotesk + DM Sans design                                                                                 |
-| **Portal Scanner**       | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
+| **Portal Scanner**       | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever |
 | **Batch Processing**     | Parallel evaluation with `claude -p` workers                                                                                             |
 | **Dashboard TUI**        | Terminal UI to browse, filter, and sort your pipeline                                                                                    |
 | **Human-in-the-Loop**    | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call               |
@@ -162,7 +162,7 @@ npm install
 # 3. Evaluate a job description
 node gemini-eval.mjs "We are looking for a Senior AI Engineer..."
 node gemini-eval.mjs --file ./jds/my-job.txt
-npm run gemini:eval -- "JD text here"
+node gemini-eval.mjs "JD text here"
 ```
 
 > **Free tier:** Both options work without billing. Native CLI uses Google OAuth; the API script uses `gemini-2.5-flash` (15 RPM, 1M tokens/day free).
@@ -200,7 +200,7 @@ You paste a job URL or description
 └────────┬─────────┘
          │
 ┌────────▼─────────┐
-│  A-F Evaluation  │  Match, gaps, comp research, STAR stories
+│  A-G Evaluation  │  Match, gaps, comp research, STAR stories, legitimacy
 │  (reads cv.md)   │
 └────────┬─────────┘
          │
@@ -223,7 +223,7 @@ The scanner comes with **45+ companies** ready to scan and **19 search queries**
 **Automation:** n8n, Zapier, Make.com
 **European:** Factorial, Attio, Tinybird, Clarity AI, Travelperk
 
-**Job boards searched:** Ashby, Greenhouse, Lever, Wellfound, Workable, RemoteFront
+**Job boards searched:** Ashby, Greenhouse, Lever
 
 By default `node scan.mjs` (a.k.a. `npm run scan`) trusts what each ATS feed returns. Some companies leave stale postings in their public API even after the role is closed, so those expired entries can leak into `pipeline.md`. Pass `--verify` to launch Playwright after the API pass and drop expired postings before they hit the pipeline:
 
@@ -249,8 +249,7 @@ Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, 
 
 ```
 career-ops/
-├── AGENTS.md                    # Canonical agent instructions (all CLIs)
-├── CLAUDE.md                    # Claude Code wrapper (imports AGENTS.md)
+├── CLAUDE.md                    # Agent instructions (Claude Code / OpenCode / Gemini)
 ├── cv.md                        # Your CV (create this)
 ├── article-digest.md            # Your proof points (optional)
 ├── config/

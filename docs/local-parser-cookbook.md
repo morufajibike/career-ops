@@ -27,7 +27,7 @@ Most local parsers are company-specific: the script already knows the source URL
 
 `scan.mjs` uses **0 LLM tokens** for discovery: parsers run locally and only normalized job rows enter the pipeline.
 
-In agent scan mode (`/career-ops scan`), Playwright and API niveles send large page or JSON payloads into the model. When Nivel 0 succeeds, `modes/scan.md` requires skipping those niveles for the same company (`local_parser_ok`).
+In agent scan mode (`/career-ops scan`), Playwright and API levels send large page or JSON payloads into the model. When Level 0 succeeds, `modes/scan.md` requires skipping those levels for the same company (`local_parser_ok`).
 
 Measured benchmarks (Cohere + Mobileye fixtures, `tiktoken` `cl100k_base`, Playwright vs parser vs API) live on branch `feature/local-parser-integration-tests` with `npm run test:scan-tokens` and full tables in that branch's copy of this cookbook.
 
@@ -69,4 +69,4 @@ Local parsers run before ATS API detection. If a local parser fails and the comp
 
 ## Agent scan (`/career-ops scan`)
 
-`scan.mjs` already uses one provider per company (local parser only, no duplicate API pass). In full agent scan mode (`modes/scan.md`), when Nivel 0 succeeds for a company, the agent must **skip** Playwright (Nivel 1) and API (Nivel 2) for that company, and filter Nivel 3 WebSearch hits that match the same company. General portal queries (`site:jobs.ashbyhq.com`, role keywords) still run for discovery of other employers.
+`scan.mjs` already uses one provider per company (local parser only, no duplicate API pass). In full agent scan mode (`modes/scan.md`), when Level 0 succeeds for a company, the agent must **skip** Playwright (Level 1) and API (Level 2) for that company, and filter Level 3 WebSearch hits that match the same company. General portal queries (`site:jobs.ashbyhq.com`, role keywords) still run for discovery of other employers.
