@@ -41,7 +41,7 @@ PRs without a corresponding issue may be closed if they don't align with the pro
 
 ## Guidelines
 
-- Keep modes language-agnostic when possible (Claude handles both EN and ES)
+- Keep modes language-agnostic when possible (Claude handles the English and additional language modes (de/fr/pt))
 - Scripts should handle missing files gracefully (check `existsSync` before `readFileSync`)
 - Dashboard changes require `go build` — test with real data before submitting
 - Don't commit personal data (cv.md, profile.yml, applications.md, reports/)
