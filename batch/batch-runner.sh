@@ -314,12 +314,50 @@ reserve_report_num() {
   run_with_state_lock reserve_report_num_unlocked "$@"
 }
 
+# Reject control characters / newlines in an attacker-controlled field.
+# `id`, `url` and `notes` originate from batch-input.tsv and are later
+# interpolated into the worker prompt and the resolved-prompt template, so a
+# raw newline or other control byte could inject extra instructions.
+has_control_chars() {
+  local value="$1"
+  [[ "$value" == *$'\n'* || "$value" == *$'\r'* || "$value" == *$'\t'* ]] && return 0
+  # Any remaining C0 control byte (0x00-0x1F) or DEL (0x7F).
+  LC_ALL=C grep -q '[[:cntrl:]]' <<<"$value"
+}
+
+# Validate that a string is a well-formed http(s) URL with a host, restricted
+# to the RFC 3986 URI character set. Anything outside that set -- backslashes,
+# quotes, whitespace, shell/awk metacharacters -- is rejected. A positive
+# `grep -E` allow-list is used rather than a `[[ =~ ]]` bracket expression to
+# avoid ambiguity around escaping inside bash regex bracket expressions.
+is_valid_http_url() {
+  local candidate="$1"
+  # Scheme + non-empty host segment.
+  [[ "$candidate" =~ ^https?://[^/]+ ]] || return 1
+  # Whole string must consist only of RFC 3986 URI characters.
+  LC_ALL=C grep -Eq "^https?://[][A-Za-z0-9._~:/?#@!\$&'()*+,;=%-]+\$" <<<"$candidate"
+}
+
 # Process a single offer
 process_offer() {
   local id="$1" url="$2" source="$3" notes="$4"
 
   local started_at
   started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+  # Validate attacker-controlled fields before they reach the prompt/template.
+  # Reject the row (logged, marked skipped) rather than risk prompt injection.
+  if has_control_chars "$id" || has_control_chars "$url" || has_control_chars "$notes"; then
+    echo "    ⏭️  Skipped #$id: control characters in id/url/notes"
+    update_state "$id" "$url" "skipped" "$started_at" "$started_at" "-" "-" "invalid-input-control-chars" "0"
+    return 0
+  fi
+  if ! is_valid_http_url "$url"; then
+    echo "    ⏭️  Skipped #$id: malformed URL (must be http(s)): $url"
+    update_state "$id" "$url" "skipped" "$started_at" "$started_at" "-" "-" "invalid-input-url" "0"
+    return 0
+  fi
+
   local retries
   retries=$(get_retries "$id")
   local report_num
@@ -332,7 +370,7 @@ process_offer() {
 
   # Build the prompt with placeholders replaced
   local prompt
-  prompt="Procesa esta oferta de empleo. Ejecuta el pipeline completo: evaluación A-F + report .md + PDF + tracker line."
+  prompt="Procesa esta oferta de empleo. Ejecuta el pipeline completo: evaluación A-G + report .md + PDF + tracker line."
   prompt="$prompt URL: $url"
   prompt="$prompt JD file: $jd_file"
   prompt="$prompt Report number: $report_num"
@@ -341,24 +379,42 @@ process_offer() {
 
   local log_file="$LOGS_DIR/${report_num}-${id}.log"
 
-  # Prepare system prompt with placeholders resolved
+  # Prepare system prompt with placeholders resolved.
+  #
+  # Substitution is done with awk passing each value via -v so the data is
+  # never parsed as a substitution script. Replacement is literal: we split on
+  # the placeholder with index()/substr() rather than gsub(), so special
+  # characters in the values (`&`, sed/regex metacharacters, the `|` delimiter)
+  # are inserted verbatim and cannot be interpreted as commands. (`url`/`id`
+  # are validated above; `jd_file`/`report_num`/`date` are system-generated,
+  # but treating them all literally keeps this injection-proof.)
   local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
-  # Escape sed delimiter characters in variables to prevent substitution breakage
-  local esc_url esc_jd_file esc_report_num esc_date esc_id
-  esc_url="${url//\\/\\\\}"
-  esc_url="${esc_url//|/\\|}"
-  esc_jd_file="${jd_file//\\/\\\\}"
-  esc_jd_file="${esc_jd_file//|/\\|}"
-  esc_report_num="${report_num//|/\\|}"
-  esc_date="${date//|/\\|}"
-  esc_id="${id//|/\\|}"
-  sed \
-    -e "s|{{URL}}|${esc_url}|g" \
-    -e "s|{{JD_FILE}}|${esc_jd_file}|g" \
-    -e "s|{{REPORT_NUM}}|${esc_report_num}|g" \
-    -e "s|{{DATE}}|${esc_date}|g" \
-    -e "s|{{ID}}|${esc_id}|g" \
-    "$PROMPT_FILE" > "$resolved_prompt"
+  awk \
+    -v url="$url" \
+    -v jd_file="$jd_file" \
+    -v report_num="$report_num" \
+    -v date_val="$date" \
+    -v id="$id" '
+    function repl(line, token, value,    out, pos) {
+      out = ""
+      pos = index(line, token)
+      while (pos > 0) {
+        out = out substr(line, 1, pos - 1) value
+        line = substr(line, pos + length(token))
+        pos = index(line, token)
+      }
+      return out line
+    }
+    {
+      line = $0
+      line = repl(line, "{{URL}}", url)
+      line = repl(line, "{{JD_FILE}}", jd_file)
+      line = repl(line, "{{REPORT_NUM}}", report_num)
+      line = repl(line, "{{DATE}}", date_val)
+      line = repl(line, "{{ID}}", id)
+      print line
+    }
+  ' "$PROMPT_FILE" > "$resolved_prompt"
 
   # Launch claude -p worker.
   # Model defaults to the Claude Max subscription default unless --model was
@@ -392,7 +448,10 @@ process_offer() {
       if (( $(echo "$score < $MIN_SCORE" | bc -l) )); then
         update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "below-min-score" "$retries"
         echo "    ⏭️  Skipped (score: $score < min-score: $MIN_SCORE)"
-        continue
+        # Must `return`, not `continue`: in parallel mode this function runs
+        # as a backgrounded subshell with no enclosing loop, where `continue`
+        # errors.
+        return 0
       fi
     fi
 
