@@ -149,7 +149,19 @@ async function generatePDF() {
 
   const browser = await chromium.launch({ headless: true });
   try {
-    const page = await browser.newPage();
+    // A CV/JD render is fully static: no scripts, no remote resources. Disable
+    // JavaScript so untrusted HTML cannot execute, and block every request that
+    // is not a local file:// load so it cannot exfiltrate local files or beacon
+    // out (defence against malicious CV/JD-derived markup).
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    await context.route('**/*', (route) => {
+      if (route.request().url().startsWith('file://')) {
+        route.continue();
+      } else {
+        route.abort();
+      }
+    });
+    const page = await context.newPage();
 
     // Set content with file base URL for any relative resources
     await page.setContent(html, {
@@ -157,8 +169,9 @@ async function generatePDF() {
       baseURL: `file://${dirname(inputPath)}/`,
     });
 
-    // Wait for fonts to load
-    await page.evaluate(() => document.fonts.ready);
+    // Fonts are loaded from local file:// URLs via CSS during the networkidle
+    // wait above. document.fonts.ready is not used here because JavaScript is
+    // disabled in this context for security.
 
     // Generate PDF
     const pdfBuffer = await page.pdf({
