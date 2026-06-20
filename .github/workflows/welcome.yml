@@ -1,3 +1,11 @@
+# SECURITY (pwn-request prevention): this workflow runs on `pull_request_target`,
+# which executes with a read/write token and access to repository secrets in the
+# context of the BASE repository. It must therefore NEVER check out, build, run,
+# or otherwise execute code from the PR head (the fork). Do NOT add an
+# `actions/checkout` of the PR head/ref, and do NOT run any PR-supplied scripts
+# here. actions/first-interaction only posts a fixed greeting via the API, so it
+# is safe — keep it that way. See:
+# https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
 name: Welcome
 
 on:
@@ -13,7 +21,7 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/first-interaction@v3
+      - uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d # v3.1.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           pr_message: |

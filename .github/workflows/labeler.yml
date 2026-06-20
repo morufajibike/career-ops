@@ -1,3 +1,11 @@
+# SECURITY (pwn-request prevention): this workflow runs on `pull_request_target`,
+# which executes with a read/write token and access to repository secrets in the
+# context of the BASE repository. It must therefore NEVER check out, build, run,
+# or otherwise execute code from the PR head (the fork). Do NOT add an
+# `actions/checkout` of the PR head/ref, and do NOT run any PR-supplied scripts
+# here. actions/labeler only reads the changed-file list via the API, so it is
+# safe — keep it that way. See:
+# https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
 name: Label PRs
 
 on:
@@ -11,6 +19,6 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/labeler@v6
+      - uses: actions/labeler@f27b608878404679385c85cfa523b85ccb86e213 # v6.1.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
