@@ -166,6 +166,39 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 	return apps
 }
 
+// extractBatchURL pulls the job URL from a batch-input.tsv row. It prefers the
+// real URL embedded in the notes column ("Title @ Company | Match% | https://...")
+// and falls back to the source URL in field 1. Returns "" when neither is an
+// http(s) URL. Caller must ensure len(fields) >= 4.
+func extractBatchURL(fields []string) string {
+	notes := fields[3]
+	if idx := strings.LastIndex(notes, "| "); idx >= 0 {
+		u := strings.TrimSpace(notes[idx+2:])
+		if strings.HasPrefix(u, "http") {
+			return u
+		}
+	}
+	if strings.HasPrefix(fields[1], "http") {
+		return fields[1]
+	}
+	return ""
+}
+
+// extractBatchRoleCompany parses the role and company from a batch-input.tsv
+// notes value of the form "Role @ Company | Match% | URL". Returns empty strings
+// when the " @ " separator is absent.
+func extractBatchRoleCompany(notes string) (role, company string) {
+	notesPart := notes
+	if pipeIdx := strings.Index(notesPart, " | "); pipeIdx >= 0 {
+		notesPart = notesPart[:pipeIdx]
+	}
+	if atIdx := strings.LastIndex(notesPart, " @ "); atIdx >= 0 {
+		role = strings.TrimSpace(notesPart[:atIdx])
+		company = strings.TrimSpace(notesPart[atIdx+3:])
+	}
+	return role, company
+}
+
 // loadBatchInputURLs reads batch-input.tsv and returns a map of batch ID -> job URL.
 func loadBatchInputURLs(careerOpsPath string) map[string]string {
 	inputPath := filepath.Join(careerOpsPath, "batch", "batch-input.tsv")
@@ -179,19 +212,8 @@ func loadBatchInputURLs(careerOpsPath string) map[string]string {
 		if len(fields) < 4 || fields[0] == "id" {
 			continue
 		}
-		id := fields[0]
-		notes := fields[3]
-		// Extract real job URL from notes: "Title @ Company | Match% | https://actual-url"
-		if idx := strings.LastIndex(notes, "| "); idx >= 0 {
-			u := strings.TrimSpace(notes[idx+2:])
-			if strings.HasPrefix(u, "http") {
-				result[id] = u
-				continue
-			}
-		}
-		// Fallback: use JackJill URL
-		if strings.HasPrefix(fields[1], "http") {
-			result[id] = fields[1]
+		if url := extractBatchURL(fields); url != "" {
+			result[fields[0]] = url
 		}
 	}
 	return result
@@ -223,30 +245,8 @@ func loadJobURLs(careerOpsPath string) map[string]string {
 		if len(fields) < 4 || fields[0] == "id" {
 			continue
 		}
-		e := batchEntry{id: fields[0]}
-		notes := fields[3]
-
-		// Extract URL from notes: "Title @ Company | Match% | https://actual-url"
-		if idx := strings.LastIndex(notes, "| "); idx >= 0 {
-			u := strings.TrimSpace(notes[idx+2:])
-			if strings.HasPrefix(u, "http") {
-				e.url = u
-			}
-		}
-		// Fallback: use JackJill URL from field 1
-		if e.url == "" && strings.HasPrefix(fields[1], "http") {
-			e.url = fields[1]
-		}
-
-		// Extract company and role: "Role @ Company | Match% | URL"
-		notesPart := notes
-		if pipeIdx := strings.Index(notesPart, " | "); pipeIdx >= 0 {
-			notesPart = notesPart[:pipeIdx]
-		}
-		if atIdx := strings.LastIndex(notesPart, " @ "); atIdx >= 0 {
-			e.role = strings.TrimSpace(notesPart[:atIdx])
-			e.company = strings.TrimSpace(notesPart[atIdx+3:])
-		}
+		e := batchEntry{id: fields[0], url: extractBatchURL(fields)}
+		e.role, e.company = extractBatchRoleCompany(fields[3])
 
 		if e.url != "" {
 			entries[fields[0]] = e
@@ -275,8 +275,11 @@ func loadJobURLs(careerOpsPath string) map[string]string {
 		}
 		if e, ok := entries[id]; ok {
 			reportToURL[reportNum] = e.url
-			if len(reportNum) < 3 {
-				reportToURL[fmt.Sprintf("%03s", reportNum)] = e.url
+			// Also index under the tracker's 3-digit zero-padded form so a short
+			// batch report number (e.g. "42") resolves a padded lookup ("042").
+			// The "0" flag is ignored for %s in Go, so parse to int and use %03d.
+			if n, err := strconv.Atoi(reportNum); err == nil {
+				reportToURL[fmt.Sprintf("%03d", n)] = e.url
 			}
 		}
 	}
@@ -374,27 +377,12 @@ func enrichAppURLsByCompany(careerOpsPath string, apps []model.CareerApplication
 		if len(fields) < 4 || fields[0] == "id" {
 			continue
 		}
-		notes := fields[3]
-		var url string
-		if idx := strings.LastIndex(notes, "| "); idx >= 0 {
-			u := strings.TrimSpace(notes[idx+2:])
-			if strings.HasPrefix(u, "http") {
-				url = u
-			}
-		}
-		if url == "" && strings.HasPrefix(fields[1], "http") {
-			url = fields[1]
-		}
+		url := extractBatchURL(fields)
 		if url == "" {
 			continue
 		}
-		notesPart := notes
-		if pipeIdx := strings.Index(notesPart, " | "); pipeIdx >= 0 {
-			notesPart = notesPart[:pipeIdx]
-		}
-		if atIdx := strings.LastIndex(notesPart, " @ "); atIdx >= 0 {
-			role := strings.TrimSpace(notesPart[:atIdx])
-			company := strings.TrimSpace(notesPart[atIdx+3:])
+		role, company := extractBatchRoleCompany(fields[3])
+		if company != "" {
 			key := normalizeCompany(company)
 			byCompany[key] = append(byCompany[key], entry{role: role, url: url})
 		}

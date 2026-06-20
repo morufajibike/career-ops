@@ -48,17 +48,23 @@ func (m *ProgressModel) Resize(width, height int) {
 func (m ProgressModel) Update(msg tea.Msg) (ProgressModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		maxScroll := m.maxScroll()
 		switch msg.String() {
 		case "q", "esc":
 			return m, func() tea.Msg { return ProgressClosedMsg{} }
 		case "down", "j":
-			m.scrollOffset++
+			if m.scrollOffset < maxScroll {
+				m.scrollOffset++
+			}
 		case "up", "k":
 			if m.scrollOffset > 0 {
 				m.scrollOffset--
 			}
 		case "pgdown", "ctrl+d":
 			m.scrollOffset += m.height / 2
+			if m.scrollOffset > maxScroll {
+				m.scrollOffset = maxScroll
+			}
 		case "pgup", "ctrl+u":
 			m.scrollOffset -= m.height / 2
 			if m.scrollOffset < 0 {
@@ -72,28 +78,46 @@ func (m ProgressModel) Update(msg tea.Msg) (ProgressModel, tea.Cmd) {
 	return m, nil
 }
 
+// availBodyHeight returns the number of body lines that fit on screen.
+func (m ProgressModel) availBodyHeight() int {
+	availHeight := m.height - 4 // header + help + padding
+	if availHeight < 3 {
+		availHeight = 3
+	}
+	return availHeight
+}
+
+// maxScroll returns the largest valid scroll offset for the rendered body.
+func (m ProgressModel) maxScroll() int {
+	maxScroll := len(m.renderBodyLines()) - m.availBodyHeight()
+	if maxScroll < 0 {
+		maxScroll = 0
+	}
+	return maxScroll
+}
+
+// renderBodyLines builds the scrollable body and returns it as individual lines.
+func (m ProgressModel) renderBodyLines() []string {
+	body := lipgloss.JoinVertical(lipgloss.Left,
+		m.renderFunnel(),
+		"",
+		m.renderScoreDistribution(),
+		"",
+		m.renderRates(),
+		"",
+		m.renderWeeklyActivity(),
+	)
+	return strings.Split(body, "\n")
+}
+
 // View renders the progress screen.
 func (m ProgressModel) View() string {
 	header := m.renderHeader()
-	funnel := m.renderFunnel()
-	scores := m.renderScoreDistribution()
-	rates := m.renderRates()
-	weekly := m.renderWeeklyActivity()
 	help := m.renderHelp()
 
-	// Combine panels
-	body := lipgloss.JoinVertical(lipgloss.Left,
-		funnel,
-		"",
-		scores,
-		"",
-		rates,
-		"",
-		weekly,
-	)
+	bodyLines := m.renderBodyLines()
 
 	// Apply scroll
-	bodyLines := strings.Split(body, "\n")
 	offset := m.scrollOffset
 	if offset >= len(bodyLines) {
 		offset = len(bodyLines) - 1
@@ -106,15 +130,11 @@ func (m ProgressModel) View() string {
 	}
 
 	// Clamp to available height
-	availHeight := m.height - 4 // header + help + padding
-	if availHeight < 3 {
-		availHeight = 3
-	}
-	if len(bodyLines) > availHeight {
+	if availHeight := m.availBodyHeight(); len(bodyLines) > availHeight {
 		bodyLines = bodyLines[:availHeight]
 	}
 
-	body = strings.Join(bodyLines, "\n")
+	body := strings.Join(bodyLines, "\n")
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, body, help)
 }

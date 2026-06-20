@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -180,10 +181,7 @@ func (m ViewerModel) renderHeader() string {
 		if m.scrollOffset >= maxScroll {
 			return "End"
 		}
-		return func() string {
-			s := pct
-			return string(rune('0'+s/10%10)) + string(rune('0'+s%10)) + "%"
-		}()
+		return fmt.Sprintf("%d%%", pct)
 	}())
 
 	gap := m.width - lipgloss.Width(m.title) - lipgloss.Width(scroll) - 4

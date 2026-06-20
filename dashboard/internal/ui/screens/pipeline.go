@@ -214,11 +214,10 @@ func (m PipelineModel) WithReloadedData(apps []model.CareerApplication, metrics 
 		return reloaded
 	}
 
-	if m.cursor >= len(reloaded.filtered) {
-		reloaded.cursor = len(reloaded.filtered) - 1
-	} else if m.cursor > 0 {
-		reloaded.cursor = m.cursor
-	}
+	// No match for the previously selected row (e.g. it was filtered out or
+	// removed). Restoring the stale positional cursor would land on an unrelated
+	// row, so reset to the top for predictable behaviour.
+	reloaded.cursor = 0
 	reloaded.adjustScroll()
 	return reloaded
 }
