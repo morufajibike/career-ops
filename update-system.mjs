@@ -56,7 +56,6 @@ const SYSTEM_PATHS = [
   'generate-pdf.mjs',
   'generate-latex.mjs',
   'merge-tracker.mjs',
-  'tracker-links.mjs',
   'verify-pipeline.mjs',
   'dedup-tracker.mjs',
   'normalize-statuses.mjs',
@@ -370,9 +369,12 @@ async function apply() {
       throw violation;
     }
 
-    // 5. Install any new dependencies
+    // 5. Install any new dependencies. Use --ignore-scripts so a pulled
+    // package.json cannot run arbitrary lifecycle scripts (pre/post-install)
+    // during an unattended update. Recommended follow-up: verify the pulled
+    // commit via a GPG signed tag before applying.
     try {
-      execSync('npm install --silent', { cwd: ROOT, timeout: 60000 });
+      execSync('npm install --ignore-scripts --silent', { cwd: ROOT, timeout: 60000 });
     } catch {
       console.log('npm install skipped (may need manual run)');
     }
